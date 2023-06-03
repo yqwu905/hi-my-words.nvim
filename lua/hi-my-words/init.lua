@@ -38,6 +38,7 @@ end
 local Words_hlgrps = {}
 -- Register all marked words in the hash table. Key = "word", Value = match ID
 local Words_register = {}
+local register_words_num = 0
 
 local function wreg_is_registered(w)
   return Words_register[w]
@@ -62,6 +63,7 @@ end
 
 local function wreg_clear()
   Words_register = {}
+  register_words_num = 0
   Words_hlgrps = {}
   Current_hl_grp = 1
 end
@@ -142,12 +144,14 @@ local function highlight_word_under_cursor()
   end
   local m_id = wreg_is_registered(w)
   if m_id == nil then
+    register_words_num = register_words_num + 1
     local hl_grp = next_hl_grp()
     m_id = matchadd_all_windows(w, hl_grp)
     wreg_register(w, m_id, hl_grp)
     -- TODO: introduce settings:
     vim.fn.setreg("/", "\\<" .. w .. "\\>")
   else
+    register_words_num = register_words_num - 1
     matchdel_all_windows(m_id)
     wreg_unregister(w)
     -- TODO: introduce settings:
@@ -159,11 +163,15 @@ local function highlight_word_under_cursor()
 end
 
 local function clear_all_highlights()
-  wreg_clear()
-  for _, w_id in ipairs(api.nvim_list_wins()) do
-    api.nvim_win_call(w_id, function()
-      vim.fn.clearmatches()
-    end)
+  if register_words_num == 0 then
+    vim.cmd("noh")
+  else
+    wreg_clear()
+    for _, w_id in ipairs(api.nvim_list_wins()) do
+      api.nvim_win_call(w_id, function()
+        vim.fn.clearmatches()
+      end)
+    end
   end
 end
 
