@@ -63,7 +63,6 @@ end
 
 local function wreg_clear()
   Words_register = {}
-  register_words_num = 0
   Words_hlgrps = {}
   Current_hl_grp = 1
 end
@@ -166,6 +165,7 @@ local function clear_all_highlights()
   if register_words_num == 0 then
     vim.cmd("noh")
   else
+    register_words_num = 0
     wreg_clear()
     for _, w_id in ipairs(api.nvim_list_wins()) do
       api.nvim_win_call(w_id, function()
